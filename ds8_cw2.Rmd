@@ -1,0 +1,55 @@
+---
+title: "2016 Election results in Saint Petersburg"
+author: "Sergei Zykov"
+date: "February 14, 2017"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library("plotly")
+library("reshape")
+
+```
+
+## Preprocess raw data - part 1
+
+This raw dataset was found at http://www.cikrf.ru/, downloaded in *.xls format and
+exported to csv/utf8 using Calc from the Libre Office suite 
+(R packages didn't work passably here and I've been exhausted to solve that Charlie Foxtrot).
+
+```{r echo=TRUE,results='hide'}
+Sys.setlocale("LC_ALL", locale = "Russian")
+rawReport <- read.csv("report.csv", sep = ';'
+                      , encoding="UTF-8"
+                      , stringsAsFactors = FALSE)
+
+data1 <- rawReport[26:41, 2:28]
+# names(data1) <- cn
+entries1 <- data1[(1:dim(data1)[1]) %% 2 == 1, 1];
+entries2 <- data1[(1:dim(data1)[1]) %% 2 == 0, 2:dim(data1)[2]];
+entries <- cbind(entries1, entries2);
+```
+
+## Preprocess raw data - part 2
+
+```{r echo=TRUE}
+cn <- rawReport[42, 2:28]
+cn[1,1] <- "Party";
+names(entries) <- cn;
+for (colNum in 2:dim(entries)[2]) {
+  entries[, colNum] <- as.numeric(gsub("(.*)%$", "\\1", entries[,colNum]));
+}
+entries[,1] <- as.factor(entries[,1]);
+
+```
+
+
+## Plotly chart
+
+```{r echo=TRUE, warning=FALSE}
+
+plot_ly(melt(data = entries, id = "Party"), y = ~value,
+        color = ~Party, type = "box")
+```
+
